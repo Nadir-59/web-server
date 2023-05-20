@@ -1,0 +1,53 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+function if_alive(){
+  if pgrep -x httpd >/dev/null && pgrep -x mysqld_safe >/dev/null ; then 
+    return 0;
+  else
+    return 1;
+  fi
+}
+
+function start_xamp(){
+  if if_alive ; then
+    return 1;
+  else
+    httpd && mysqld_safe -u root >/dev/null &
+    anime "* Server starting !" blue && sleep 0.2
+    if if_alive ; then
+       anime "* Server started succesfully !" blue
+    fi
+
+    return 0;
+  fi
+}
+
+function kill_xamp(){
+   if if_alive ; then
+      killall -g httpd mysqld_safe
+      anime "* Server stoped !" red
+   fi
+}
+
+function anime(){
+      text=$1
+      if [[ $2 == "red" ]] ; then
+         printf "\r\e[91m"
+      elif [[ $2 == "blue" ]] ; then
+         printf "\r\e[96m"
+      elif [[ $2 == "yellow" ]] ; then
+         printf "\r\e[93m"
+      fi
+      for ((i=0;i<"${#text}";i++)) ; do
+         printf "\r${text:0:i+1}"
+         sleep 0.001
+      done
+      echo -e "\e[0m"
+}
+if [[ $1 == "" ]] ; then
+    if ! start_xamp ; then
+       anime "* Server is already running !" yellow
+    fi
+elif [[ $1 == "kill" ]] ; then
+    kill_xamp
+fi
